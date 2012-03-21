@@ -1,0 +1,12 @@
+== CASnova
+
+Chiliproject plugin to support authentication via Central Authentication Service (CAS).
+
+== License
+
+This plugin is licensed under the GNU GPL v2. See LICENSE.txt for details. 
+
+== References
+
+redmine_cas: https://github.com/Emergya/redmine_cas
+rubycas-client: code.google.com/p/rubycas-client

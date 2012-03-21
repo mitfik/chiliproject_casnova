@@ -1,0 +1,10 @@
+development:
+  enabled: true
+  url: http://your_cas_domain/
+
+test:
+  enabled: false
+
+production:
+  enabled: true
+  url: http://your_cas_domain/
