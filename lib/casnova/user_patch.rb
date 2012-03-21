@@ -15,7 +15,7 @@ module Casnova
 
     module InstanceMethods
       def change_password_allowed_with_cas?
-        CAS::CONFIG['enabled'] ? false : change_password_allowed_without_cas
+        Casnova.is_enabled? ? false : change_password_allowed_without_cas
       end
     end
   end

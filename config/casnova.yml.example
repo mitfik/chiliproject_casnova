@@ -1,10 +1,11 @@
-development:
+common: &common
   enabled: true
-  url: http://your_cas_domain/
+  url: http://localhost:9292/
 
+development:
+  <<: *common
 test:
   enabled: false
 
 production:
-  enabled: true
-  url: http://your_cas_domain/
+  <<: *common

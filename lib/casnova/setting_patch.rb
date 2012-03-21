@@ -17,7 +17,7 @@ module Casnova
 
     module ClassMethods
       def self_registration_with_cas?
-        CAS::CONFIG['enabled'] ? false : self_registration_without_cas?
+        Casnova.is_enabled? ? false : self_registration_without_cas?
       end
     end
   end

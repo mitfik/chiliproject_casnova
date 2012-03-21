@@ -18,7 +18,7 @@ module Casnova
 
     module InstanceMethods
       def login_with_cas
-        if CAS::CONFIG['enabled']
+        if Casnova.is_enabled?
           if params[:ticket]
             redirect_back_or_default :controller => 'my', :action => 'page'
           else
@@ -30,7 +30,7 @@ module Casnova
       end
 
       def logout_with_cas
-        if CAS::CONFIG['enabled']
+        if Casnova.is_enabled?
           self.logged_user = nil
           CASClient::Frameworks::Rails::Filter::logout(self, home_url)
         else
@@ -41,7 +41,7 @@ module Casnova
       def register_with_cas
         set_language_if_valid params[:user][:language] rescue nil # Show the activation message in the user's language
         register_without_cas
-        if CAS::CONFIG['enabled'] and !performed?
+        if Casnova.is_enabled? and !performed?
           render :template => 'account/register_with_cas'
         end
       end

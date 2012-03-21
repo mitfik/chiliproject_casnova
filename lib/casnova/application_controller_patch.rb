@@ -16,7 +16,7 @@ module Casnova
 
     module InstanceMethods
       def cas_filter
-        if CAS::CONFIG['enabled'] and !['atom', 'xml', 'json'].include? request.format
+        if Casnova.is_enabled? and !['atom', 'xml', 'json'].include? request.format
           if params[:controller] != 'account'
             CASClient::Frameworks::Rails::GatewayFilter.filter(self)
           else
@@ -28,7 +28,7 @@ module Casnova
       end
 
       def set_user_id
-        if CAS::CONFIG['enabled']
+        if Casnova.is_enabled?
           user = User.find_by_login session[:cas_user]
           if user.nil? # New user
             @user = User.new(:language => Setting.default_language)
