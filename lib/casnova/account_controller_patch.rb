@@ -1,4 +1,6 @@
 require 'dispatcher'
+require 'net/http'
+require 'rest_client'
 
 # Patches chiliproject AccountController dinamically. Manages login and logout
 # through CAS.
@@ -18,11 +20,34 @@ module Casnova
 
     module InstanceMethods
       def login_with_cas
-        if Casnova.is_enabled?
+        if Casnova.is_working?
           if params[:ticket]
             redirect_back_or_default :controller => 'my', :action => 'page'
           else
-            CASClient::Frameworks::Rails::Filter::redirect_to_cas_for_authentication(self)
+            begin
+              if request.post?
+                # Check if user exist if yes if he has active account
+                raise "User is Blocked" unless User.active.find_by_login(params[:username])
+                #CASClient::Frameworks::Rails::Filter::redirect_to_cas_for_authentication(self)
+                RestClient.post "http://localhost:9292/login", { :password => params[:password], :username => params[:username] }, :content_type => :json, :accept => :json do |response, request, result, &block|
+                  case response.code
+                    when 201
+                      cas_params = JSON.parse(response)
+                      cookies[:tgt] = cas_params["tgt"]
+                      redirect_back_or_default :controller => 'my', :action => 'page'
+                    when 401
+                      flash.now[:error] = "Invalid credential or try another auth source"
+                      render :login
+                    else
+                      flash.now[:error] = "Something went wrong"
+                      render :login
+                  end
+                end
+              end
+            rescue Exception => e
+              p "Error: Login faild: #{e}"
+              login_without_cas
+            end
           end
         else
           login_without_cas
@@ -30,9 +55,18 @@ module Casnova
       end
 
       def logout_with_cas
-        if Casnova.is_enabled?
+        if Casnova.is_working?
           self.logged_user = nil
-          CASClient::Frameworks::Rails::Filter::logout(self, home_url)
+          RestClient.delete "http://localhost:9292/logout", :content_type => :json, :accept => :json do |response, request, result, &block|
+            case response.code
+              when 200
+                cookies.delete 'tgt'
+                logout_without_cas
+              else
+                flash.now[:error] = "Something went wrong"
+                redirect_back_or_default :controller => 'my', :action => 'page'
+            end
+          end
         else
           logout_without_cas
         end
@@ -41,7 +75,7 @@ module Casnova
       def register_with_cas
         set_language_if_valid params[:user][:language] rescue nil # Show the activation message in the user's language
         register_without_cas
-        if Casnova.is_enabled? and !performed?
+        if Casnova.is_working? and !performed?
           render :template => 'account/register_with_cas'
         end
       end
