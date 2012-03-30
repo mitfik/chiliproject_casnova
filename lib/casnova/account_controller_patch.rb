@@ -20,6 +20,7 @@ module Casnova
 
     module InstanceMethods
       def login_with_cas
+        is_ajax = request.xhr? ? true : false
         if Casnova.is_working?
           if params[:ticket]
             redirect_back_or_default :controller => 'my', :action => 'page'
@@ -34,7 +35,13 @@ module Casnova
                     when 201
                       cas_params = JSON.parse(response)
                       cookies[:tgt] = cas_params["tgt"]
-                      redirect_back_or_default :controller => 'my', :action => 'page'
+                      if is_ajax
+                        replay = {}
+                        replay[:tgt] = cas_params["tgt"]
+                        render :json => replay
+                      else
+                        redirect_back_or_default :controller => 'my', :action => 'page'
+                      end
                     when 401
                       flash.now[:error] = "Invalid credential or try another auth source"
                       render :login

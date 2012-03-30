@@ -21,7 +21,6 @@ module Casnova
   end
 end
 
-    debugger
 if Casnova.is_enabled?
   CASClient::Frameworks::Rails::Filter.configure(
     :cas_base_url => Casnova::CONFIG['url'],
