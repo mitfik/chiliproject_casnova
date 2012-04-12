@@ -30,7 +30,7 @@ module Casnova
                 # Check if user exist if yes if he has active account
                 raise "User is Blocked" unless User.active.find_by_login(params[:username])
                 #CASClient::Frameworks::Rails::Filter::redirect_to_cas_for_authentication(self)
-                RestClient.post "http://localhost:9292/login", { :password => params[:password], :username => params[:username] }, :content_type => :json, :accept => :json do |response, request, result, &block|
+                RestClient.post "#{Casnova::CONFIG['url']}/api/login", { :password => params[:password], :username => params[:username] }, :content_type => :json, :accept => :json do |response, request, result, &block|
                   case response.code
                     when 201
                       cas_params = JSON.parse(response)
@@ -64,7 +64,7 @@ module Casnova
       def logout_with_cas
         if Casnova.is_working?
           self.logged_user = nil
-          RestClient.delete "http://localhost:9292/logout", :content_type => :json, :accept => :json do |response, request, result, &block|
+          RestClient.delete "#{Casnova::CONFIG['url']}/api/logout", :cookies => {:tgt => cookies['tgt']}, :content_type => :json do |response, request, result, &block|
             case response.code
               when 200
                 cookies.delete 'tgt'
