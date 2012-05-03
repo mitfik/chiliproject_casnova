@@ -64,7 +64,7 @@ module Casnova
       def logout_with_cas
         if Casnova.is_working?
           self.logged_user = nil
-          RestClient.delete "#{Casnova::CONFIG['url']}/api/logout", :cookies => {:tgt => cookies['tgt']}, :content_type => :json do |response, request, result, &block|
+          RestClient.delete "#{Casnova::CONFIG['url']}/api/logout", :cookies => {:tgt => cookies['tgt'] || ""}, :content_type => :json do |response, request, result, &block|
             case response.code
               when 200
                 cookies.delete 'tgt'
