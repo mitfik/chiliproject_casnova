@@ -15,7 +15,7 @@ module Casnova
 
     module InstanceMethods
       def change_password_allowed_with_cas?
-        Casnova.is_working? ? false : change_password_allowed_without_cas?
+        Casnova.is_working? ? true : change_password_allowed_without_cas?
       end
     end
   end
