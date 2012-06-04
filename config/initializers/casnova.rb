@@ -13,9 +13,9 @@ module Casnova
   def Casnova.is_alive?
     begin
       response = RestClient.get "#{Casnova::CONFIG['url']}/api/isalive", :accept => :json
-      return true if response.code == 204 
+      return response.code == 204 
     rescue => e
-      raise "Error: CAS server: #{e}"
+      puts "Error: CAS server: #{e}. Proceed without cas."
     end 
   end
 end
