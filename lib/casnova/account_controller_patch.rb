@@ -1,4 +1,3 @@
-require 'dispatcher'
 require 'net/http'
 require 'rest_client'
 
@@ -7,10 +6,11 @@ require 'rest_client'
 module Casnova
   module AccountControllerPatch
     def self.included(base) # :nodoc:
-      base.send(:include, InstanceMethods)
 
       base.class_eval do
         unloadable # Mark as unloadable so it is reloaded in development
+
+        include InstanceMethods
 
         alias_method_chain :login, :cas
         alias_method_chain :logout, :cas
@@ -20,6 +20,7 @@ module Casnova
 
     module InstanceMethods
       def login_with_cas
+        debugger
         is_ajax = request.xhr? ? true : false
         if Casnova.is_working?
           if params[:ticket]
@@ -27,20 +28,36 @@ module Casnova
           else
             begin
               if request.post?
-                # Check if user exist if yes if he has active account
-                raise "User is Blocked" unless User.active.find_by_login(params[:username])
-                #CASClient::Frameworks::Rails::Filter::redirect_to_cas_for_authentication(self)
                 RestClient.post "#{Casnova::CONFIG['url']}/api/login", { :password => params[:password], :username => params[:username] }, :content_type => :json, :accept => :json do |response, request, result, &block|
                   case response.code
                     when 201
+                      # Check if user exist in chiliproject 
+                      user = User.find_by_login(params[:username])
+                      session[:cas_user] = user.id
                       cas_params = JSON.parse(response)
-                      cookies[:tgt] = cas_params["tgt"]
-                      if is_ajax
-                        replay = {}
-                        replay[:tgt] = cas_params["tgt"]
-                        render :json => replay
+                      cookies[:tgt] = {:value => cas_params["tgt"], :domain => ".cstick.com"}
+                      unless user
+                        user = User.new
+                        user.login = params[:username]
+                        user.language = Setting.default_language
+                        if user.save
+                          user.reload
+                          logger.info("User '#{user.login}' created from cas")
+                        end
+                        if is_ajax
+                          replay = {:message => "You must register first Your account on http://dev.cstick.com"}
+                          render :json => replay
+                        else
+                          register_with_cas
+                        end
                       else
-                        redirect_back_or_default :controller => 'my', :action => 'page'
+                        if is_ajax
+                          replay = {}
+                          replay[:tgt] = cas_params["tgt"]
+                          render :json => replay
+                        else
+                          redirect_back_or_default :controller => 'my', :action => 'page'
+                        end
                       end
                     when 401
                       flash.now[:error] = "Invalid credential or try another auth source"
@@ -53,7 +70,7 @@ module Casnova
               end
             rescue Exception => e
               p "Error: Login faild: #{e}"
-              login_without_cas
+              #login_without_cas
             end
           end
         else
@@ -64,6 +81,7 @@ module Casnova
       def logout_with_cas
         if Casnova.is_working?
           self.logged_user = nil
+          # TODO do it in background
           RestClient.delete "#{Casnova::CONFIG['url']}/api/logout", :cookies => {:tgt => cookies['tgt'] || ""}, :content_type => :json do |response, request, result, &block|
             case response.code
               when 200
@@ -82,7 +100,7 @@ module Casnova
       def register_with_cas
         set_language_if_valid params[:user][:language] rescue nil # Show the activation message in the user's language
         register_without_cas
-        if Casnova.is_working? and !performed?
+        if !performed? #Casnova.is_working? and !performed?
           render :template => 'account/register_with_cas'
         end
       end
@@ -90,7 +108,4 @@ module Casnova
   end
 end
 
-Dispatcher.to_prepare do
-  require_dependency 'account_controller'
-  AccountController.send(:include, Casnova::AccountControllerPatch)
-end
+AccountController.send(:include, Casnova::AccountControllerPatch)

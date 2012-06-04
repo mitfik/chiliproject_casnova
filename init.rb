@@ -5,10 +5,16 @@ Dir["#{File.dirname(__FILE__)}/config/initializers/**/*.rb"].sort.each do |initi
 end
 
 require 'redmine'
-require 'casnova/account_controller_patch'
-require 'casnova/application_controller_patch'
-require 'casnova/setting_patch'
-require 'casnova/user_patch'
+require 'dispatcher'
+Dispatcher.to_prepare do
+ # require_dependency 'application_controller'
+ # require_dependency 'account_controller'
+ # require_dependency 'principal'
+ # require_dependency 'user'
+  require_dependency 'casnova/account_controller_patch'
+  require_dependency 'casnova/application_controller_patch'
+  require_dependency 'casnova/user_patch'
+end
 
 Redmine::Plugin.register :chiliproject_casnova do
   name 'Chiliproject Casnova plugin'

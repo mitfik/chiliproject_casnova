@@ -1,5 +1,3 @@
-require 'dispatcher'
-
 # Patches Chiliproject's ApplicationController dinamically. Prepends a CAS gatewaying
 # filter.
 module Casnova
@@ -28,26 +26,19 @@ module Casnova
       end
 
       def set_user_id
-        if Casnova.is_working?
-          user = User.find_by_login session[:cas_user]
-          if user.nil? # New user
-            @user = User.new(:language => Setting.default_language)
-            @user.login = session[:cas_user]
-            session[:auth_source_registration] = { :login => @user.login }
-            render :template => 'account/register_with_cas'
-          elsif session[:user_id] != user.id and !['atom', 'xml', 'json'].include? request.format
-
-            session[:user_id] = user.id
-            call_hook(:controller_account_success_authentication_after, { :user => user })
-          end
+        user = User.find_by_login session[:cas_user]
+        if user.nil? # New user
+          @user = User.new(:language => Setting.default_language)
+          @user.login = session[:cas_user]
+          session[:auth_source_registration] = { :login => @user.login }
+          render :template => 'account/register_with_cas'
+        elsif session[:user_id] != user.id and !['atom', 'xml', 'json'].include? request.format
+          session[:user_id] = user.id
+          call_hook(:controller_account_success_authentication_after, { :user => user })
         end
-        true
       end
     end
   end
 end
 
-Dispatcher.to_prepare do
-  require_dependency 'application_controller'
-  ApplicationController.send(:include, Casnova::ApplicationControllerPatch)
-end
+ApplicationController.send(:include, Casnova::ApplicationControllerPatch)

@@ -1,5 +1,3 @@
-require 'dispatcher'
-
 # Patches Chiliproject's User dinamically. Disallows password change.
 module Casnova
   module UserPatch
@@ -15,14 +13,11 @@ module Casnova
 
     module InstanceMethods
       def change_password_allowed_with_cas?
-        Casnova.is_working? ? true : change_password_allowed_without_cas?
+        #Casnova.is_working? ? true : change_password_allowed_without_cas?
+        true
       end
     end
   end
 end
 
-Dispatcher.to_prepare do
-  require_dependency 'principal'
-  require_dependency 'user'
-  User.send(:include, Casnova::UserPatch)
-end
+User.send(:include, Casnova::UserPatch)
