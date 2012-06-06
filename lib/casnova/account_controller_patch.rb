@@ -35,7 +35,7 @@ module Casnova
                       user = User.find_by_login(params[:username])
                       session[:cas_user] = user.id
                       cas_params = JSON.parse(response)
-                      cookies[:tgt] = {:value => cas_params["tgt"], :domain => ".cstick.com"}
+                      cookies[:tgt] = {:value => cas_params["tgt"], :domain => Casnova::CONFIG['domain']}
                       unless user
                         user = User.new
                         user.login = params[:username]
@@ -45,7 +45,7 @@ module Casnova
                           logger.info("User '#{user.login}' created from cas")
                         end
                         if is_ajax
-                          replay = {:message => "You must register first Your account on http://dev.cstick.com"}
+                          replay = {:message => "You must register first Your account"}
                           render :json => replay
                         else
                           register_with_cas
