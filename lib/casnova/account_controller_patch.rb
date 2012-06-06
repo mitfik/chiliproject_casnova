@@ -20,7 +20,6 @@ module Casnova
 
     module InstanceMethods
       def login_with_cas
-        debugger
         is_ajax = request.xhr? ? true : false
         if Casnova.is_working?
           if params[:ticket]
@@ -81,7 +80,7 @@ module Casnova
       def logout_with_cas
         if Casnova.is_working?
           self.logged_user = nil
-          # TODO do it in background
+          # TODO do it in background and move to  rubyrest-client
           RestClient.delete "#{Casnova::CONFIG['url']}/api/logout", :cookies => {:tgt => cookies['tgt'] || ""}, :content_type => :json do |response, request, result, &block|
             case response.code
               when 200
@@ -100,7 +99,7 @@ module Casnova
       def register_with_cas
         set_language_if_valid params[:user][:language] rescue nil # Show the activation message in the user's language
         register_without_cas
-        if !performed? #Casnova.is_working? and !performed?
+        if Casnova.is_working? and !performed?
           render :template => 'account/register_with_cas'
         end
       end
