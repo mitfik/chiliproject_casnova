@@ -32,7 +32,6 @@ module Casnova
                     when 201
                       # Check if user exist in chiliproject 
                       user = User.find_by_login(params[:username])
-                      session[:cas_user] = user.id
                       cas_params = JSON.parse(response)
                       cookies[:tgt] = {:value => cas_params["tgt"], :domain => Casnova::CONFIG['domain']}
                       unless user
@@ -69,7 +68,7 @@ module Casnova
               end
             rescue Exception => e
               p "Error: Login faild: #{e}"
-              #login_without_cas
+              login_without_cas
             end
           end
         else

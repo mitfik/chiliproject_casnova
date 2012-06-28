@@ -8,7 +8,8 @@ module Casnova
       base.class_eval do
         unloadable # Mark as unloadable so it is reloaded in development
 
-        prepend_before_filter :cas_filter, :set_user_id
+        # order is very important !!!
+        prepend_before_filter :set_user_id, :cas_filter 
       end
     end
 

@@ -1,6 +1,7 @@
 common: &common
   enabled: true
   url: http://localhost:9292/
+  domain: .localhost #domain where You will store cookies remember about . before the name to make sure that all subdomain will have access to those data
 
 development:
   <<: *common
