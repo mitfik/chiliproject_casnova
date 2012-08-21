@@ -8,28 +8,35 @@ module Casnova
       base.class_eval do
         unloadable # Mark as unloadable so it is reloaded in development
 
-        # order is very important !!!
-        prepend_before_filter :set_user_id, :cas_filter 
+        prepend_before_filter :set_user_id
+        prepend_before_filter :cas_filter
       end
     end
 
     module InstanceMethods
       def cas_filter
-        if Casnova.is_working? and !['atom', 'xml'].include? request.format
-          if params[:controller] != 'account'
-            CASClient::Frameworks::Rails::GatewayFilter.filter(self)
-          else
-            CASClient::Frameworks::Rails::Filter.filter(self)
+        begin
+          if !['atom', 'xml'].include? request.format 
+            if params[:controller] != 'account'
+              # TODO gateway allow display page even if authorization fail, so above if statemant is incorect because we do not check that here.
+              CASClient::Frameworks::Rails::GatewayFilter.filter(self)
+            else
+              # TODO implement APIFilter ? to make sure that none of actions will redirect anywhere.
+              CASClient::Frameworks::Rails::Filter.filter(self)
+            end
           end
-        else
-          true
+        rescue => exception
+          logger.error "CASClient error: #{exception.message}" if logger
         end
+        true
       end
 
       def set_user_id
-        if Casnova.is_working?
+      #  if Casnova.is_working?
+      # TODO make sure that above if statement make sense because we do not need to check each time /is_alive only in place where is necessary (because it will be called each request
+        #  # find_by_login return always anonymouse if it gets nil TODO
           user = User.find_by_login session[:cas_user]
-          if user.nil? # New user
+          if user.nil? # New user TODO this never be true look above
             @user = User.new(:language => Setting.default_language)
             @user.login = session[:cas_user]
             session[:auth_source_registration] = { :login => @user.login }
@@ -38,7 +45,7 @@ module Casnova
             session[:user_id] = user.id
             call_hook(:controller_account_success_authentication_after, { :user => user })
           end
-        end
+        #end
       end
     end
   end
