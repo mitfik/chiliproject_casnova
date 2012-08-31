@@ -59,10 +59,10 @@ module Casnova
                       end
                     when 401
                       flash.now[:error] = "Invalid credential or try another auth source"
-                      render :login
+                      render :login, :status => 205
                     else
                       flash.now[:error] = "Something went wrong"
-                      render :login
+                      render :login, :status => 500
                   end
                 end
               end
