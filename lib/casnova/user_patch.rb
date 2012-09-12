@@ -1,4 +1,6 @@
 # Patches Chiliproject's User dinamically. Disallows password change.
+
+require 'principal'
 module Casnova
   module UserPatch
     def self.included(base) # :nodoc:
